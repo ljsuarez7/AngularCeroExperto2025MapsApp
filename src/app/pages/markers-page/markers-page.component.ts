@@ -1,7 +1,8 @@
 import { AfterViewInit, Component, ElementRef, signal, viewChild } from '@angular/core';
-import mapboxgl from 'mapbox-gl';
+import mapboxgl, { LngLatLike } from 'mapbox-gl';
 import { environment } from '../../../environments/environment';
 import { v4 as UUIDv4 } from 'uuid';
+import { JsonPipe } from '@angular/common';
 
 mapboxgl.accessToken = environment.mapboxKey;
 
@@ -12,7 +13,7 @@ interface Marker {
 
 @Component({
   selector: 'app-markers-page',
-  imports: [],
+  imports: [JsonPipe],
   templateUrl: './markers-page.component.html',
 })
 export class MarkersPageComponent implements AfterViewInit{
@@ -77,6 +78,16 @@ export class MarkersPageComponent implements AfterViewInit{
 
     // this.markers.set([newMarker, ...this.markers()]);
     this.markers.update((markers) => [newMarker, ...markers]);
+
+  }
+
+  flyToMarker(lngLat: LngLatLike){
+
+    if(!this.map()) return;
+
+    this.map()?.flyTo({
+      center: lngLat
+    });
 
   }
 
