@@ -1,8 +1,14 @@
 import { AfterViewInit, Component, ElementRef, signal, viewChild } from '@angular/core';
 import mapboxgl from 'mapbox-gl';
 import { environment } from '../../../environments/environment';
+import { v4 as UUIDv4 } from 'uuid';
 
 mapboxgl.accessToken = environment.mapboxKey;
+
+interface Marker {
+  id: string;
+  mapboxMarker: mapboxgl.Marker;
+}
 
 @Component({
   selector: 'app-markers-page',
@@ -13,6 +19,7 @@ export class MarkersPageComponent implements AfterViewInit{
 
   divElement = viewChild<ElementRef>('map');
   map = signal<mapboxgl.Map|null>(null);
+  markers = signal<Marker[]>([]);
 
   async ngAfterViewInit() {
 
@@ -29,43 +36,47 @@ export class MarkersPageComponent implements AfterViewInit{
       zoom: 14, // starting zoom
     });
 
-    const marker = new mapboxgl.Marker({
-      draggable: false,
-      color: '#000'
-    }).setLngLat([-5.657480, 43.530843]).addTo(map);
+    // const marker = new mapboxgl.Marker({
+    //   draggable: false,
+    //   color: '#000'
+    // }).setLngLat([-5.657480, 43.530843]).addTo(map);
 
-    marker.on('dragend', (event) => {
-      console.log(event);
-    });
+    // marker.on('dragend', (event) => {
+    //   console.log(event);
+    // });
 
     this.mapListeners(map);
 
   }
 
   mapListeners(map: mapboxgl.Map){
+    map.on('click', (event) => this.mapClick(event));
+    this.map.set(map);
+  }
 
-    console.log('mapListeners');
+  mapClick(event: mapboxgl.MapMouseEvent){
 
+    if(!this.map()) return;
 
-    // map.on('zoomend', (event) => {
-    //   const newZoom = event.target.getZoom();
-    //   this.zoom.set(newZoom);
-    // });
+    const map = this.map()!;
 
-    // map.on('moveend', () => {
-    //   const center = map.getCenter();
-    //   this.coordinates.set(center);
-    // });
+    const color = '#xxxxxx'.replace(/x/g, (y) =>
+      ((Math.random() * 16) | 0).toString(16)
+    );
 
-    // map.on('load', () => {
-    //   console.log('loaded');
-    // });
+    const coords = event.lngLat;
 
-    // map.addControl(new mapboxgl.FullscreenControl());
-    // map.addControl(new mapboxgl.NavigationControl());
-    // map.addControl(new mapboxgl.ScaleControl());
+    const mapboxMarker = new mapboxgl.Marker({
+      color: color
+    }).setLngLat(coords).addTo(map);
 
-    // this.map.set(map);
+    const newMarker: Marker = {
+      id: UUIDv4(),
+      mapboxMarker: mapboxMarker
+    }
+
+    // this.markers.set([newMarker, ...this.markers()]);
+    this.markers.update((markers) => [newMarker, ...markers]);
 
   }
 
